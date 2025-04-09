@@ -1,4 +1,4 @@
-package com.tomacat.blog.configuration;
+package blog.configuration;
 
 import org.h2.Driver;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
@@ -45,7 +46,12 @@ public class DataSourceConfiguration {
         DataSource dataSource = event.getApplicationContext().getBean(DataSource.class);
 
         ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(new ClassPathResource("schema.sql")); // Файл должен находиться в ресурсах
+        Resource schemaResource = new ClassPathResource("schema.sql");
+        if (!schemaResource.exists()) {
+            System.err.println("Schema file not found!");
+            return;
+        }
+        populator.addScript(schemaResource);
         populator.execute(dataSource);
     }
 

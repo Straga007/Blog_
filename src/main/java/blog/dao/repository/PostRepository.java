@@ -1,4 +1,8 @@
-package com.tomacat.blog.dao.repository;
+package blog.dao.repository;
 
-public interface PostRepository {
+import blog.model.Post;
+import org.springframework.data.repository.CrudRepository;
+
+public interface PostRepository extends CrudRepository<Post, Integer> {
+    public Post save(Post post);
 }

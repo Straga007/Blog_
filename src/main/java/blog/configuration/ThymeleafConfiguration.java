@@ -1,4 +1,4 @@
-package com.tomacat.blog.configuration;
+package blog.configuration;
 
 
 import org.springframework.context.annotation.Bean;

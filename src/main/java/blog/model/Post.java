@@ -17,7 +17,14 @@ public class Post {
     @ElementCollection
     private List<String> tags;
     private List<Comment> comments;
-
+    public Post() {}
+    public Post(int id, String title, String text, String imagePath,List<String> tags){
+        this.id = id;
+        this.title = title;
+        this.text = text;
+        this.imagePath = imagePath;
+        this.tags = tags;
+    }
     // Getters and Setters
     public int getId() {
         return id;

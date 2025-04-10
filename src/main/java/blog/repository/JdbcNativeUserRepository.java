@@ -2,17 +2,28 @@ package blog.repository;
 
 import blog.dao.repository.PostRepository;
 import blog.model.Post;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Optional;
 
 @Repository
 public class JdbcNativeUserRepository implements PostRepository {
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     @Override
     public Post save(Post post) {
-
+        String sql = "INSERT INTO posts (title, text, image_path, likes_count) VALUES (?, ?, ?, ?)";
+        jdbcTemplate.update(sql,
+                post.getTitle(),
+                post.getText(),
+                post.getImagePath(),
+                post.getLikesCount()
+        );
+        post.setId(jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class));
         return post;
     }
+
 
     @Override
     public <S extends Post> Iterable<S> saveAll(Iterable<S> entities) {
@@ -20,8 +31,21 @@ public class JdbcNativeUserRepository implements PostRepository {
     }
 
     @Override
-    public Optional<Post> findById(Integer integer) {
-        return Optional.empty();
+    public Optional<Post> findById(Integer id) {
+        String sql = "SELECT * FROM posts WHERE id = ?";
+        Post post = jdbcTemplate.queryForObject(sql,
+                new Object[]{id},
+                (rs, rowNum) -> {
+                    Post p = new Post();
+                    p.setId(rs.getInt("id"));
+                    p.setTitle(rs.getString("title"));
+                    p.setText(rs.getString("text"));
+                    p.setImagePath(rs.getString("image_path"));
+                    p.setLikesCount(rs.getInt("likes_count"));
+                    return p;
+                }
+        );
+        return Optional.ofNullable(post);
     }
 
     @Override

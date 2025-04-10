@@ -2,6 +2,7 @@ package blog.controller;
 
 import blog.model.Paging;
 import blog.model.Post;
+import blog.model.PostRecord;
 import blog.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -61,30 +62,17 @@ public class PostController {
         return "add-post";
     }
     // добавить сохр в базу данных
-    //
     @PostMapping
-    public String createPost(
-            @RequestParam(value = "title", defaultValue = "") String title,
-            @RequestParam(value = "text", defaultValue = "") String text,
-            @RequestParam(value = "image") MultipartFile image,
-            @RequestParam(value = "tags", defaultValue = "") String tags) throws IOException {
-        System.out.println("u are here 1");
-
-        // Save the image file to the server
-        String imagePath = postService.saveImage(image);
-        System.out.println("u are here 2");
+    public String createNewPost(@ModelAttribute PostRecord postRecord) throws IOException {
+        String imagePath = postService.saveImage(postRecord.getImage());
 
         Post post = new Post();
-        post.setTitle(title);
-        post.setText(text);
+        post.setTitle(postRecord.getTitle());
+        post.setText(postRecord.getText());
         post.setImagePath(imagePath);
-        post.setTags(Arrays.asList(tags.split(",")));
-        System.out.println("u are here 3");
+        post.setTags(Arrays.asList(postRecord.getTags().split(",")));
 
         postService.savePost(post);
-        System.out.println("u are here 4");
-
-        // Redirect to the post's page
         return "redirect:/posts/" + post.getId();
     }
 }

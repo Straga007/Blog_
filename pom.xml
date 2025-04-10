@@ -62,7 +62,7 @@
 
   </dependencies>
   <build>
-    <finalName>ROOT</finalName>
+    <finalName>/</finalName>
     <pluginManagement>
       <plugins>
         <plugin>

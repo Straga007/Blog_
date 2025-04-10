@@ -26,32 +26,21 @@ public class PostService {
         return false;
     }
     public Post getPostById(int id) {
-        // Implement logic to fetch a post by ID
-        Post post = new Post();
-        post.setId(id);
-        post.setTitle("Sample Post");
-        post.setText("This is a sample post text.");
-        post.setImagePath("/images/sample.jpg");
-        post.setLikesCount(10);
-        post.setTags(List.of("tag1", "tag2"));
-        post.setComments(List.of());
-        return post;
+        return postRepository.findById(id).orElseThrow(()
+                -> new RuntimeException("Post not found"));
     }
     public String saveImage(MultipartFile image) throws IOException {
         if (image.isEmpty()) {
             return null;
         }
 
-        // Define the directory to save the image
         String uploadDir = "src/main/resources/static/images/";
         Path uploadPath = Paths.get(uploadDir);
 
-        // Create the directory if it doesn't exist
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
 
-        // Save the file
         String fileName = System.currentTimeMillis() + "_" + image.getOriginalFilename();
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(image.getInputStream(), filePath);

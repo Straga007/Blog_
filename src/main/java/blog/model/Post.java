@@ -3,7 +3,8 @@ import org.springframework.data.annotation.Id;
 import javax.persistence.ElementCollection;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
-import javax.xml.stream.events.Comment;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Post {
@@ -24,12 +25,36 @@ public class Post {
         this.text = text;
         this.imagePath = imagePath;
         this.tags = tags;
+        this.comments = new ArrayList<>();
+    }
+
+    // Добавляем методы для Thymeleaf
+    public List<String> tags() {
+        return this.tags;
+    }
+
+    public List<Comment> comments() {
+        return this.comments;
+    }
+
+    public String textPreview() {
+        return getTextPreview();
+    }
+
+    public List<String> textParts() {
+        return getTextParts();
+    }
+
+    public String tagsAsText() {
+        return getTagsAsText();
     }
     // Getters and Setters
     public int getId() {
         return id;
     }
-
+    public void addComment(Comment comment) {
+        comments.add(comment);
+    }
     public void setId(int id) {
         this.id = id;
     }
@@ -91,4 +116,11 @@ public class Post {
         // Return tags as a comma-separated string
         return tags != null ? String.join(", ", tags) : "";
     }
+    public List<String> getTextParts() {
+        if (text == null || text.isEmpty()) {
+            return List.of();
+        }
+        return Arrays.asList(text.split("\\r?\\n")); // Handles \n and \r\n
+    }
+
 }

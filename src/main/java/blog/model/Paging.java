@@ -6,6 +6,7 @@ public class Paging {
     private boolean hasNext;
     private boolean hasPrevious;
 
+    // Геттеры и сеттеры в стандартном Java-стиле
     public int getPageNumber() {
         return pageNumber;
     }
@@ -36,5 +37,22 @@ public class Paging {
 
     public void setHasPrevious(boolean hasPrevious) {
         this.hasPrevious = hasPrevious;
+    }
+
+    // Дополнительные методы для совместимости с Thymeleaf
+    public int pageNumber() {
+        return pageNumber;
+    }
+
+    public int pageSize() {
+        return pageSize;
+    }
+
+    public boolean hasNext() {
+        return hasNext;
+    }
+
+    public boolean hasPrevious() {
+        return hasPrevious;
     }
 }

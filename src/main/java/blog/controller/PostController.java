@@ -2,17 +2,21 @@ package blog.controller;
 
 import blog.model.Paging;
 import blog.model.Post;
-import blog.model.PostRecord;
 import blog.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/posts")
@@ -48,31 +52,88 @@ public class PostController {
 
         return "posts";
     }
+    @PostMapping("/{id}/comments")
+    public String addComment(
+            @PathVariable int id,
+            @RequestParam("text") String text) {
+
+        postService.addComment(id, text);
+        return "redirect:/posts/" + id;
+    }
+
+    @PostMapping("/{id}")
+    public String updatePost(
+            @PathVariable int id,
+            @RequestParam("title") String title,
+            @RequestParam("text") String text,
+            @RequestParam("tags") String tags,
+            @RequestParam(value = "image", required = false) MultipartFile image) throws IOException {
+
+        Post post = postService.getPostById(id);
+        post.setTitle(title);
+        post.setText(text);
+
+        // Преобразуем строку тегов в список
+        List<String> tagsList = Arrays.stream(tags.split(","))
+                .map(String::trim)
+                .filter(tag -> !tag.isEmpty())
+                .collect(Collectors.toList());
+        post.setTags(tagsList);
+
+        if (image != null && !image.isEmpty()) {
+            String imagePath = postService.saveImage(image);
+            post.setImagePath(imagePath);
+        }
+
+        postService.savePost(post);
+        return "redirect:/posts/" + id;
+    }
+    @GetMapping("/images/{id}")
+    public ResponseEntity<byte[]> getImage(@PathVariable int id) throws IOException {
+        byte[] imageBytes = postService.getImageByPostId(id);
+        if (imageBytes == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // Определяем тип содержимого (Content-Type) на основе расширения файла
+        String imagePath = postService.getPostById(id).getImagePath();
+        String contentType = Files.probeContentType(Paths.get(imagePath));
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(imageBytes);
+    }
     @GetMapping("/{id}")
     public String post(@PathVariable int id, Model model) {
         Post post = postService.getPostById(id);
-
         // Add post to model
         model.addAttribute("post", post);
-
         return "post";
+    }
+    @PostMapping("/{id}/like")
+    public String handleLike(
+            @PathVariable int id,
+            @RequestParam("like") boolean like) {
+        postService.updateLikes(id, like);
+        return "redirect:/posts/" + id;
+    }
+    @GetMapping("/{id}/edit")
+    public String editPost(@PathVariable int id, Model model) {
+        Post post = postService.getPostById(id);
+        model.addAttribute("post", post);
+        return "add-post";
     }
     @GetMapping("/add")
     public String addPost() {
         return "add-post";
     }
-    // добавить сохр в базу данных
     @PostMapping
-    public String createNewPost(@ModelAttribute PostRecord postRecord) throws IOException {
-        String imagePath = postService.saveImage(postRecord.getImage());
+    public String createNewPost(    @RequestParam("title") String title,
+                                    @RequestParam("text") String text,
+                                    @RequestParam("tags") String tags,
+                                    @RequestParam("image") MultipartFile image) throws IOException {
+        int postId = postService.createPost(title, text, tags, image);
 
-        Post post = new Post();
-        post.setTitle(postRecord.getTitle());
-        post.setText(postRecord.getText());
-        post.setImagePath(imagePath);
-        post.setTags(Arrays.asList(postRecord.getTags().split(",")));
-
-        postService.savePost(post);
-        return "redirect:/posts/" + post.getId();
+        return "redirect:/posts/" + postId;
     }
 }

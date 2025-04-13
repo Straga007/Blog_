@@ -1,8 +1,12 @@
 package blog.dao.repository;
 
 import blog.model.Post;
-import org.springframework.data.repository.CrudRepository;
+import java.util.List;
+import java.util.Optional;
 
-public interface PostRepository extends CrudRepository<Post, Integer> {
-    public Post save(Post post);
+public interface PostRepository {
+    public void save(Post post);
+    public Optional<Post> findById(Integer id);
+    public List<Post> getPosts(String search, int pageSize, int pageNumber);
+    public boolean hasMorePosts(String search, int pageSize, int pageNumber);
 }

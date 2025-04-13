@@ -11,3 +11,9 @@ CREATE TABLE IF NOT EXISTS tags (
     tag VARCHAR(255),
     FOREIGN KEY (post_id) REFERENCES posts(id)
     );
+CREATE TABLE IF NOT EXISTS comments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    post_id INT,
+    text TEXT NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES posts(id)
+    );

@@ -87,6 +87,17 @@ public class JdbcNativeUserRepository implements PostRepository {
                 List<String> tags = jdbcTemplate.queryForList(tagsSql, String.class, id);
                 post.setTags(tags);
             }
+            // Загружаем комментарии для поста
+            String commentsSql = "SELECT id, text FROM comments WHERE post_id = ?";
+            List<Comment> comments = jdbcTemplate.query(commentsSql,
+                    new Object[]{id},
+                    (rs, rowNum) -> {
+                        Comment comment = new Comment();
+                        comment.setId(rs.getInt("id"));
+                        comment.setText(rs.getString("text"));
+                        return comment;
+                    });
+            post.setComments(comments);
 
             return Optional.ofNullable(post);
         } catch (EmptyResultDataAccessException e) {
@@ -94,17 +105,20 @@ public class JdbcNativeUserRepository implements PostRepository {
         }
     }
     private void updateComments(Post post) {
-        // Delete existing comments for the post
-        String deleteSql = "DELETE FROM comments WHERE post_id = ?";
-        jdbcTemplate.update(deleteSql, post.getId());
 
-        // Insert new comments
         if (post.getComments() != null && !post.getComments().isEmpty()) {
-            String insertSql = "INSERT INTO comments (post_id, text) VALUES (?, ?)";
             for (Comment comment : post.getComments()) {
-                jdbcTemplate.update(insertSql, post.getId(), comment.getText());
-                // Update comment's ID if needed (requires SELECT LAST_INSERT_ID())
-                // Handle this if comments need their own IDs
+                if (comment.getId() == 0) { // if new
+                    String insertSql = "INSERT INTO comments (post_id, text) VALUES (?, ?)";
+                    KeyHolder keyHolder = new GeneratedKeyHolder();
+                    jdbcTemplate.update(connection -> {
+                        PreparedStatement ps = connection.prepareStatement(insertSql, new String[]{"id"});
+                        ps.setInt(1, post.getId());
+                        ps.setString(2, comment.getText());
+                        return ps;
+                    }, keyHolder);
+                    comment.setId(keyHolder.getKey().intValue());
+                }
             }
         }
     }
@@ -125,12 +139,22 @@ public class JdbcNativeUserRepository implements PostRepository {
                     post.setLikesCount(rs.getInt("likes_count"));
                     return post;
                 });
-
-        // Загружаем теги для каждого поста
+        // tags and comment(s)
         for (Post post : posts) {
             String tagsSql = "SELECT tag FROM tags WHERE post_id = ?";
             List<String> tags = jdbcTemplate.queryForList(tagsSql, String.class, post.getId());
             post.setTags(tags);
+
+            String commentsSql = "SELECT id, text FROM comments WHERE post_id = ?";
+            List<Comment> comments = jdbcTemplate.query(commentsSql,
+                    new Object[]{post.getId()},
+                    (rs, rowNum) -> {
+                        Comment comment = new Comment();
+                        comment.setId(rs.getInt("id"));
+                        comment.setText(rs.getString("text"));
+                        return comment;
+                    });
+            post.setComments(comments);
         }
 
         return posts;
@@ -145,6 +169,30 @@ public class JdbcNativeUserRepository implements PostRepository {
         } catch (EmptyResultDataAccessException e) {
             return false;
         }
+    }
+
+    @Override
+    public void deleteComment(int postId, int commentId) {
+        String sql = "DELETE FROM comments WHERE id = ? AND post_id = ?";
+        jdbcTemplate.update(sql, commentId, postId);
+    }
+
+    @Override
+    public void editComment(int postId, int commentId, String text) {
+        String sql = "UPDATE comments SET text = ? WHERE id = ? AND post_id = ?";
+        jdbcTemplate.update(sql, text, commentId, postId);
+    }
+
+    @Override
+    public void deletePost(int postId) {
+        String deleteTagsSql = "DELETE FROM tags WHERE post_id = ?";
+        jdbcTemplate.update(deleteTagsSql, postId);
+
+        String deleteCommentsSql = "DELETE FROM comments WHERE post_id = ?";
+        jdbcTemplate.update(deleteCommentsSql, postId);
+
+        String deletePostSql = "DELETE FROM posts WHERE id = ?";
+        jdbcTemplate.update(deletePostSql, postId);
     }
 
 }

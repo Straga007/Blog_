@@ -9,4 +9,7 @@ public interface PostRepository {
     public Optional<Post> findById(Integer id);
     public List<Post> getPosts(String search, int pageSize, int pageNumber);
     public boolean hasMorePosts(String search, int pageSize, int pageNumber);
+    public void deleteComment(int postId, int commentId);
+    public void editComment(int postId, int commentId, String text);
+    public void deletePost(int postId);
 }

@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -103,6 +104,7 @@ public class PostController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(imageBytes);
     }
+
     @GetMapping("/{id}")
     public String post(@PathVariable int id, Model model) {
         Post post = postService.getPostById(id);
@@ -135,5 +137,26 @@ public class PostController {
         int postId = postService.createPost(title, text, tags, image);
 
         return "redirect:/posts/" + postId;
+    }
+    @PostMapping("/{postId}/comments/{commentId}/delete")
+    public String deleteComment(
+            @PathVariable int postId,
+            @PathVariable int commentId) {
+
+        postService.deleteComment(postId, commentId);
+        return "redirect:/posts/" + postId;
+    }
+    @PostMapping("/{postId}/comments/{commentId}")
+    public String editComment(
+            @PathVariable int postId,
+            @RequestParam("text")String text,
+            @PathVariable int commentId) {
+        postService.editComment(postId, commentId, text);
+        return "redirect:/posts/" + postId;
+    }
+    @PostMapping("/{id}/delete")
+    public String deletePost(@PathVariable int id) {
+        postService.deletePost(id);
+        return "redirect:/posts";
     }
 }

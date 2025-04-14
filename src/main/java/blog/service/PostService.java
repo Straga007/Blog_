@@ -26,12 +26,29 @@ public class PostService {
     }
     public void addComment(int postId, String text) {
         Post post = getPostById(postId);
-        Comment comment = new Comment(text); // Create new comment
-        post.addComment(comment); // Add to post's comments list
-        postRepository.save(post); // Save to persist in DB
+        Comment comment = new Comment(text);
+        post.addComment(comment);
+        postRepository.save(post);
     }
-
-
+    public void deleteComment(int postId, int commentId) {
+        Post post = getPostById(postId);
+        post.getComments().removeIf(comment -> comment.getId() == commentId);
+        postRepository.deleteComment(postId,commentId);
+        postRepository.save(post);
+    }
+    public void editComment(int postId, int commentId, String text) {
+        Post post = getPostById(postId);
+        post.getComments().stream()
+                .filter(comment -> comment.getId() == commentId)
+                .findFirst()
+                .ifPresent(comment -> {
+                    comment.setText(text);
+                    postRepository.editComment(postId, commentId, text);
+                });
+    }
+    public void deletePost(int postId){
+        postRepository.deletePost(postId);
+    }
     public boolean hasMorePosts(String search, int pageSize, int pageNumber) {
         return postRepository.hasMorePosts(search, pageSize, pageNumber);
     }

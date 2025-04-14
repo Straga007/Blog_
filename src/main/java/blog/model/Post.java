@@ -18,7 +18,9 @@ public class Post {
     @ElementCollection
     private List<String> tags;
     private List<Comment> comments;
-    public Post() {}
+    public Post() {
+        this.comments = new ArrayList<>();
+    }
     public Post(int id, String title, String text, String imagePath,List<String> tags){
         this.id = id;
         this.title = title;
@@ -28,33 +30,11 @@ public class Post {
         this.comments = new ArrayList<>();
     }
 
-    // Добавляем методы для Thymeleaf
-    public List<String> tags() {
-        return this.tags;
-    }
-
-    public List<Comment> comments() {
-        return this.comments;
-    }
-
-    public String textPreview() {
-        return getTextPreview();
-    }
-
-    public List<String> textParts() {
-        return getTextParts();
-    }
-
-    public String tagsAsText() {
-        return getTagsAsText();
-    }
     // Getters and Setters
     public int getId() {
         return id;
     }
-    public void addComment(Comment comment) {
-        comments.add(comment);
-    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -107,20 +87,47 @@ public class Post {
         this.comments = comments;
     }
 
+    // Методы для Thymeleaf
     public String getTextPreview() {
-        // Return a preview of the text, e.g., first 100 characters
         return text != null && text.length() > 100 ? text.substring(0, 100) + "..." : text;
     }
 
     public String getTagsAsText() {
-        // Return tags as a comma-separated string
         return tags != null ? String.join(", ", tags) : "";
     }
+
     public List<String> getTextParts() {
         if (text == null || text.isEmpty()) {
-            return List.of();
+            return new ArrayList<>();
         }
-        return Arrays.asList(text.split("\\r?\\n")); // Handles \n and \r\n
+        return Arrays.asList(text.split("\\r?\\n"));
     }
 
+    public void addComment(Comment comment) {
+        if (comments == null) {
+            comments = new ArrayList<>();
+        }
+        comments.add(comment);
+    }
+
+    // Методы без get
+    public List<String> tags() {
+        return getTags();
+    }
+
+    public List<Comment> comments() {
+        return getComments();
+    }
+
+    public String textPreview() {
+        return getTextPreview();
+    }
+
+    public List<String> textParts() {
+        return getTextParts();
+    }
+
+    public String tagsAsText() {
+        return getTagsAsText();
+    }
 }
